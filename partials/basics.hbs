@@ -1,90 +1,71 @@
 {{#resume.basics}}
-	<h1>{{name}}</h1>
-	<h2>{{label}}</h2>
-	<section id="basics">
-		<div class="contact">
-		{{#if website}}
-		<div class="website">
-			<strong>Website</strong>
-			{{website}}
-		</div>
-		{{/if}}
-		{{#if email}}
-		<div class="email">
-			<strong>Email</strong>
-			{{email}}
-		</div>
-		{{/if}}
-		{{#if phone}}
-		<div class="phone">
-			<strong>Phone</strong>
-			{{phone}}
-		</div>
-		{{/if}}
-		</div>
-		{{#if summary}}
-		<div class="summary">
-			<p>{{summary}}</p>
-		</div>
-		{{/if}}
-		{{#location}}
-		<h3>Location</h3>
-		<section id="location">
-			{{#if address}}
-			<div class="address">
-				<strong>Address</strong>
-				{{address}}
-			</div>
-			{{/if}}
-			{{#if postalCode}}
-			<div class="postalCode">
-				<strong>Postal code</strong>
-				{{postalCode}}
-			</div>
-			{{/if}}
-			{{#if city}}
-			<div class="city">
-				<strong>City</strong>
-				{{city}}
-			</div>
-			{{/if}}
-			{{#if countryCode}}
-			<div class="countryCode">
-				<strong>Country code</strong>
-				{{countryCode}}
-			</div>
-			{{/if}}
-			{{#if region}}
-			<div class="region">
-				<strong>Region</strong>
-				{{region}}
-			</div>
-			{{/if}}
-		</section>
-		{{/location}}
-		{{#if profiles.length}}
-		<h3>Profiles</h3>
-		<section id="profiles">
-			{{#each profiles}}
-			<div class="item">
-				{{#if network}}
-				<strong class="network">
-					{{network}}
-				</strong>
-				{{/if}}
-				{{#if username}}
-				<div class="username">
-					{{username}}
+	<section class="resume-header bg-icon-plane">
+		<div class="container">
+			<div class="row">
+				<div class="col-8 mx-md-auto">
+					<h1>{{name}}</h1>
+
+					<p class="subtitle">{{ label }}</p>
+
+					{{#if picture}}
+						<img src="{{ picture }}" alt="{{ name }}" class="user_profile">
+					{{/if}}
+
+					{{#if profiles}}
+						<ul class="social">
+							{{#each profiles}}
+								<li class="{{ network }}">
+									<a href="{{ url }}" target="_blank" title="{{ username }} on {{ network }}">
+										<i class="fab fa-{{ network }}"></i>
+									</a>
+								</li>
+							{{/each}}
+						</ul>
+					{{/if}}
 				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="contactBar">
+		<div class="container">
+			<div class="row contacts">
+				{{#if website}}
+					<div class="col-md">
+						<span>
+							<i class="fas fa-link contactIcon"></i>
+						</span>
+
+						<p>
+							<a href="{{ website }}"> {{ website }}</a>
+						</p>
+					</div>
 				{{/if}}
-				{{#if url}}
-				<div class="url">
-					<a href="{{url}}">Link</a>
-				</div>
+
+				{{#if email}}
+					<div class="col-md">
+						<span>
+							<i class="fas fa-envelope-open contactIcon"></i>
+						</span>
+
+						<p>
+							<a href="{{ email }}"> {{ email }}</a>
+						</p>
+					</div>
+				{{/if}}
+
+				{{#if computed_location}}
+					<div class="col-md">
+						<span>
+							<i class="fas fa-map-marker-alt contactIcon"></i>
+						</span>
+
+						<p>
+							<a href="{{ computed_location }}"> {{ computed_location }}</a>
+						</p>
+					</div>
 				{{/if}}
 			</div>
-			{{/each}}
-		</section>
-		{{/if}}
+		</div>
 	</section>
 {{/resume.basics}}

@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimal-ui">
 	
 	<title>{{#resume.basics}}{{name}}{{/resume.basics}}</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
 
 	<style>
 	{{{css}}}
@@ -13,17 +14,24 @@
 	
 	</head>
 	<body>
-	
-	<div id="resume">
-		{{> basics }}
-		{{> work }}
-		{{> volunteer }}
-		{{> education }}
-		{{> awards }}
-		{{> publications }}
-		{{> skills }}
-		{{> languages }}
-		{{> interests }}
-		{{> references }}
+		<div id="app">
+			<main class="template-resume resume2">
+			{{> basics }}
+			{{> work }}
+			{{> volunteer }}
+			{{> education }}
+			{{> awards }}
+			{{> publications }}
+			{{> skills }}
+			{{> languages }}
+			{{> interests }}
+			{{> references }}
+			</main>
+		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"></script>
+		<script>
+			{{js}}
+		</script>
 	</body>
 </html>
