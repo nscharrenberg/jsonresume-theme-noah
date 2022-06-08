@@ -1,13 +1,165 @@
 var fs = require("fs");
 var path = require('path');
+const _ = require('underscore');
+const utils = require('jsonresume-themeutils');
+const moment = require('moment');
+const markdown = require('markdown-it')({
+    breaks: true
+}).use(require('markdown-it-abbr'));
 var Handlebars = require("handlebars");
 
+require('moment-precise-range-plugin');
+
+utils.setConfig({ date_format: 'MMM, YYYY' });
+
 function render(resume) {
+    var addressAttrs = ['address', 'city', 'region', 'countryCode', 'postalCode'];
+    var addressValues = addressAttrs.map(key => resume.basics.location[key]);
+
 	var css = fs.readFileSync(__dirname + "/assets/css/app.css", "utf-8");
 	var js = fs.readFileSync(__dirname + "/assets/js/app.js", "utf-8");
 	var tpl = fs.readFileSync(__dirname + "/resume.hbs", "utf-8");
 	var partialsDir = path.join(__dirname, 'partials');
 	var filenames = fs.readdirSync(partialsDir);
+
+    resume.basics.picture = utils.getUrlForPicture(resume);
+    resume.basics.summary = convertMarkdown(resume.basics.summary);
+    resume.basics.computed_location = _.compact(addressValues).join(', ');
+
+    if (resume.languages) {
+        resume.basics.languages = _.pluck(resume.languages, 'language').join(', ');
+    }
+
+    _(resume.basics.profiles).forEach(p => {
+        const label = p.network.toLowerCase();
+
+        p.url = utils.getUrlForProfile(resume, label);
+        p.label = label;
+    });
+
+    resume.basics.top_five_profiles = resume.basics.profiles.slice(0, 5);
+    resume.basics.remaining_profiles = resume.basics.profiles.slice(5);
+
+    _(resume.projects).forEach(project_info => {
+        const start_date = moment(project_info.startDate, 'YYYY-MM-DD');
+        const end_date = moment(project_info.endDate, 'YYYY-MM-DD');
+        const can_calculate_period = start_date.isValid() && end_date.isValid();
+
+        if (can_calculate_period) {
+            project_info.duration = project_info.endDate != null && end_date.isValid()
+            ? moment.preciseDiff(start_date, end_date)
+            : moment.preciseDiff(start_date, moment());
+        }
+
+        if (start_date.isValid()) {
+          project_info.startDate = utils.getFormattedDate(start_date);
+        }
+
+        if (end_date.isValid()) {
+          project_info.endDate = utils.getFormattedDate(end_date);
+        }
+
+        project_info.description = convertMarkdown(project_info.description);
+
+        project_info.highlights = _(project_info.highlights)
+            .map(highlight => convertMarkdown(highlight));
+    });
+
+    _(resume.work).forEach(work_info => {
+        const start_date = moment(work_info.startDate, 'YYYY-MM-DD');
+        const end_date = moment(work_info.endDate, 'YYYY-MM-DD');
+        const can_calculate_period = start_date.isValid() && end_date.isValid();
+
+        if (can_calculate_period) {
+            work_info.duration = work_info.endDate != null && end_date.isValid()
+            ? moment.preciseDiff(start_date, end_date)
+            : moment.preciseDiff(start_date, moment());
+        }
+
+        if (start_date.isValid()) {
+          work_info.startDate = utils.getFormattedDate(start_date);
+        }
+
+        if (end_date.isValid()) {
+          work_info.endDate = utils.getFormattedDate(end_date);
+        }
+
+        work_info.summary = convertMarkdown(work_info.summary);
+
+        work_info.highlights = _(work_info.highlights)
+            .map(highlight => convertMarkdown(highlight));
+    });
+
+    _(resume.skills).forEach(skill_info => {
+        const levels = ['Beginner', 'Intermediate', 'Advanced', 'Master'];
+
+        skill_info.keywords = _(skill_info.keywords)
+            .map(k => convertMarkdown(k));
+        if (skill_info.level) {
+            skill_info.skill_class = skill_info.level.toLowerCase();
+            skill_info.level = capitalize(skill_info.level.trim());
+            skill_info.display_progress_bar = _.contains(levels, skill_info.level);
+        }
+    });
+
+    _(resume.education).forEach(education_info => {
+        ['startDate', 'endDate'].forEach(type => {
+            const date = education_info[type];
+
+            if (date) {
+                education_info[type] = utils.getFormattedDate(date);
+            }
+        });
+
+        education_info.courses = _(education_info.courses)
+            .map(c => convertMarkdown(c));
+    });
+
+    _(resume.certificates).forEach(c => {
+        const date = c.date;
+
+        if (date) {
+            c.date = utils.getFormattedDate(date, 'MMM DD, YYYY');
+        }
+    });
+
+    _(resume.awards).forEach(a => {
+        const date = a.date;
+
+        a.summary = convertMarkdown(a.summary);
+
+        if (date) {
+            a.date = utils.getFormattedDate(date, 'MMM DD, YYYY');
+        }
+    });
+
+    _(resume.volunteer).forEach(v => {
+        v.summary = convertMarkdown(v.summary);
+
+        ['startDate', 'endDate'].forEach(type => {
+            const date = v[type];
+
+            if (date) {
+                v[type] = utils.getFormattedDate(date);
+            }
+        });
+
+        v.highlights = _(v.highlights).map(convertMarkdown);
+    });
+
+    _(resume.publications).forEach(p => {
+        const date = p.releaseDate;
+
+        p.summary = convertMarkdown(p.summary);
+
+        if (date) {
+            p.releaseDate = utils.getFormattedDate(date, 'MMM DD, YYYY');
+        }
+    });
+
+    _(resume.references).forEach(r => {
+        r.reference = convertMarkdown(r.reference);
+    });
 
 	filenames.forEach(function (filename) {
 	  var matches = /^([^.]+).hbs$/.exec(filename);
@@ -20,8 +172,10 @@ function render(resume) {
 
 	  Handlebars.registerPartial(name, template);
 	});
+    
 	return Handlebars.compile(tpl)({
 		css: css,
+        floating_nav_items: getFloatingNavItems(resume),
 		js: js,
 		resume: resume
 	});
